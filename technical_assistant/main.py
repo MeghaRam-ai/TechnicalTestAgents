@@ -14,14 +14,23 @@ model = SentenceTransformer("all-MiniLM-L6-v2")
 
 
 def data_preprocess():
-    with open(os.getenv('document_path'), 'r') as file:
-        dataset = json.load(file)
-        data_df = pd.DataFrame(dataset['troubleshooting_scenarios'])
-        data_df['issue_embedding'] = data_df['issue'].apply(lambda x: model.encode(x).tolist())
-        data_df.to_csv(os.getenv('processed_document_path'))
+    try:
+        if os.getenv('document_path'):
+            with open(os.getenv('document_path'), 'r') as file:
+                dataset = json.load(file)
+                data_df = pd.DataFrame(dataset['troubleshooting_scenarios'])
+                data_df['issue_embedding'] = data_df['issue'].apply(lambda x: model.encode(x).tolist())
+                data_df.to_csv(os.getenv('processed_document_path'))
 
-        with open(os.getenv('processed_document_path'), 'w') as processed_file:
-            json.dump(data_df.to_dict(orient='records'), processed_file)
+                if os.getenv('processed_document_path'):
+                    with open(os.getenv('processed_document_path'), 'w') as processed_file:
+                        json.dump(data_df.to_dict(orient='records'), processed_file)
+                else:
+                    print("Specify processed_document_path in env file")
+        else:
+            print("Specify document path in env file")
+    except FileNotFoundError:
+        print("Error in loading data")
 
 
 def main():
