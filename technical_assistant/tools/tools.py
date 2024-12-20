@@ -8,11 +8,10 @@ model = SentenceTransformer("all-MiniLM-L6-v2")
 
 
 def load_data():
-    with open(os.getenv('document_path'), 'r') as file:
-        dataset = json.load(file)
-        data_df = pd.DataFrame(dataset['troubleshooting_scenarios'])
-        data_df['issue_embedding'] = data_df['issue'].apply(lambda x: model.encode(x).tolist())
-        return data_df
+    with open(os.getenv('processed_document_path'), 'r') as processed_file:
+        processed_data = json.load(processed_file)
+        data_df = pd.DataFrame(processed_data)
+    return data_df
 
 
 def get_agents():
@@ -30,14 +29,10 @@ def find_matching_issue(user_query):
     token_matching_score = data_df['issue'].apply(lambda x: fuzz.token_set_ratio(user_query, x))
     token_matching_score_max_index = token_matching_score.idxmax()
 
-    print(similarity_score)
-    print(token_matching_score)
-    print(similarity_score_max_index)
-    print(token_matching_score_max_index)
-
     if similarity_score[similarity_score_max_index] > float(os.getenv('similarity_threshold')) or token_matching_score[
         token_matching_score_max_index] > float(os.getenv('token_matching_threshold')):
-        max_index = similarity_score_max_index if similarity_score[similarity_score_max_index] > token_matching_score[token_matching_score_max_index] else token_matching_score_max_index
+        max_index = similarity_score_max_index if similarity_score[similarity_score_max_index] > token_matching_score[
+            token_matching_score_max_index] else token_matching_score_max_index
         return data_df['steps'][max_index]
     else:
         get_agents().transfer_to_local_search_agent()
