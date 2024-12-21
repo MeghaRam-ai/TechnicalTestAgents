@@ -1,5 +1,8 @@
-import json
+import sys
 import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+import json
 
 import nltk
 import pandas as pd
@@ -43,7 +46,8 @@ def main():
         client = Swarm()
         response = client.run(agent=Agents().local_search_agent, messages=messages)
         messages = response.messages[-1]['content']
-        print(messages)
+
+        print("\n", messages)
         user_continue = input("Do you want to continue (Y/N)?")
 
 

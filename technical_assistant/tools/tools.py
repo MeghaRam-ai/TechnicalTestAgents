@@ -27,16 +27,25 @@ def find_matching_issue(user_query):
     data_df = load_data()
 
     try:
+        # Find semantic similarity
         similarity_score = data_df['issue_embedding'].apply(
             lambda x: model.similarity(model.encode(user_query), x).item() * 100.0)
         similarity_score_max_index = similarity_score.idxmax()
+
+        # Find token matching score
         token_matching_score = data_df['issue'].apply(lambda x: fuzz.token_set_ratio(user_query, x))
         token_matching_score_max_index = token_matching_score.idxmax()
 
-        if similarity_score[similarity_score_max_index] > float(os.getenv('similarity_threshold')) or token_matching_score[
-            token_matching_score_max_index] > float(os.getenv('token_matching_threshold')):
-            max_index = similarity_score_max_index if similarity_score[similarity_score_max_index] > token_matching_score[
-                token_matching_score_max_index] else token_matching_score_max_index
+        similarity_threshold = float(os.getenv('similarity_threshold'))
+        token_matching_threshold = float(os.getenv('token_matching_threshold'))
+
+        if similarity_score[similarity_score_max_index] > similarity_threshold or \
+                token_matching_score[token_matching_score_max_index] > token_matching_threshold:
+            if similarity_score[similarity_score_max_index] > token_matching_score[token_matching_score_max_index]:
+                max_index = similarity_score_max_index
+            else:
+                max_index = token_matching_score_max_index
+
             return data_df['steps'][max_index]
         else:
             agent = get_agents()
